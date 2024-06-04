@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ action }} Task</title>
+</head>
+<body>
+    <h1>{{ action }} Task</h1>
+    <form method="POST" action="">
+        <label>Title:</label>
+        <input type="text" name="title" value="{{ task[1] if task else '' }}" required><br><br>
+        <label>Description:</label>
+        <textarea name="description" required>{{ task[2] if task else '' }}</textarea><br><br>
+        <input type="submit" value="{{ action }} Task">
+    </form>
+</body>
+</html>
