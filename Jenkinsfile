@@ -11,7 +11,7 @@ pipeline {
                 script {
                     // Gunakan kredensial GitHub untuk meng-clone repository
                     withCredentials([usernamePassword(credentialsId: "${GIT_CREDENTIALS_ID}", passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-                        git url: 'https://github.com/mahaputrailhamawal/simple-note-app', , branch: 'main', credentialsId: "${GIT_CREDENTIALS_ID}"
+                        git url: 'https://github.com/mahaputrailhamawal/simple-note-app.git', branch: 'main', credentialsId: "${GIT_CREDENTIALS_ID}"
                     }
                 }
             }
