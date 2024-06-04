@@ -3,17 +3,12 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'moose3345/simple-note-app:latest'
-        GIT_CREDENTIALS_ID = 'Github_Account'
+        // GIT_CREDENTIALS_ID = 'Github_Account'
     }
     stages {
         stage ('Checkout repo'){
             steps{
-                script {
-                    // Gunakan kredensial GitHub untuk meng-clone repository
-                    withCredentials([usernamePassword(credentialsId: "${GIT_CREDENTIALS_ID}", passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-                        git url: 'https://github.com/mahaputrailhamawal/simple-note-app.git', branch: 'main', credentialsId: "${GIT_CREDENTIALS_ID}"
-                    }
-                }
+                git url: 'https://github.com/mahaputrailhamawal/simple-note-app.git', branch: 'main'
             }
         }
         stage ('Build'){
