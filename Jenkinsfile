@@ -27,5 +27,14 @@ pipeline {
                 }
             }
         }
+
+        stage('Run Tests') {
+            steps {
+                script {
+                    // checking app using curl
+                    sh 'curl localhost:5000'
+                }
+            }
+        }
     }
 }
