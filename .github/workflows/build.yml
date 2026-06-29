@@ -1,11 +1,11 @@
-name: Build
+name: SonarQube Analysis
 
 on:
   push:
     branches:
       - main
   pull_request:
-    types: [opened, synchronize, reopened] # Good practice to scan PRs before merging
+    types: [opened, synchronize, reopened]
 
 jobs:
   sonarqube:
@@ -14,10 +14,14 @@ jobs:
     
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        # Menggunakan v4 terbaru agar kompatibel dengan sistem GitHub Node/Cache baru
+        uses: actions/checkout@v4 
+        with:
+          fetch-depth: 0  
           
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v4.0.0 # I recommend using v4+ or the v6 you had earlier
+        # Diperbarui ke versi 8 (atau minimal v7) untuk menghindari error actions/cache
+        uses: SonarSource/sonarqube-scan-action@v8 
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
