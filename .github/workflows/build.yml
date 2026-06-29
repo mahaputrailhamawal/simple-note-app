@@ -4,18 +4,22 @@ on:
   push:
     branches:
       - main
-
+  pull_request:
+    types: [opened, synchronize, reopened] # Good practice to scan PRs before merging
 
 jobs:
-  build:
-    name: Build and analyze
+  sonarqube:
+    name: Build and Analyze
     runs-on: ubuntu-latest
     
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - name: Checkout Code
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6.0.0
+          fetch-depth: 0  # Shallow clones disable cross-file taint analysis
+          
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v4.0.0 # I recommend using v4+ or the v6 you had earlier
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
