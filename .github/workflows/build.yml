@@ -15,8 +15,6 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Shallow clones disable cross-file taint analysis
           
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v4.0.0 # I recommend using v4+ or the v6 you had earlier
