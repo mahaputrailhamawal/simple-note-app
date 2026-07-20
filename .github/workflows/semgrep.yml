@@ -1,4 +1,4 @@
-name: On-Demand SAST Scanner
+name: Semgrep SAST Scanner
 
 on:
   workflow_dispatch:
@@ -9,18 +9,22 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    
+    env:
+      SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+
+    container:
+      image: semgrep/semgrep
 
     steps:
       - name : Checkout Code
         uses : actions/checkout@v4
 
       - name : Run Semgrep
-        uses : semgrep/action@v1
-        with :
-          config : "p/owasp-top-ten"
-          generateSarif : "1"
-    
-    env :
-      SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+        run : semgrep ci --config="p/owasp-top-ten" --sarif --output=semgrep.sarif
 
-          
+      - name : Upload SARIF
+        uses : github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
