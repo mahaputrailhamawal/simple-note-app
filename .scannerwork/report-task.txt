@@ -1,0 +1,6 @@
+projectKey=simple-note-app
+serverUrl=http://43.218.240.135:9000
+serverVersion=26.6.0.123539
+dashboardUrl=http://43.218.240.135:9000/dashboard?id=simple-note-app
+ceTaskId=2d0c9fba-f8db-4034-bf38-4189bea2120e
+ceTaskUrl=http://43.218.240.135:9000/api/ce/task?id=2d0c9fba-f8db-4034-bf38-4189bea2120e
