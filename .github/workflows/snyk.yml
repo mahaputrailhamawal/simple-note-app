@@ -28,10 +28,13 @@ jobs:
       - name: Install Dependencies
         working-directory: ./app
         run: pip install -r requirements.txt
+      
+      - name: Setup the Snyk CLI
+        uses: snyk/action/setup@master
 
       # 3. Run Snyk Python Scan
       - name: Run Snyk SCA Scan
-        uses: snyk/actions/python@master
+        working-directory: ./app
         continue-on-error: true # Ensures pipeline continues to upload SARIF even if issues are found
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
