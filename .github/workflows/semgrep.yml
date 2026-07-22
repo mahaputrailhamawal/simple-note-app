@@ -5,7 +5,7 @@ on:
 
 jobs:
   semgrep:
-    name: semgrep/ci
+    name: Semgrep SAST Scan
     runs-on: ubuntu-latest
     permissions:
       contents: read

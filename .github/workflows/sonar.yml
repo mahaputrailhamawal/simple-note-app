@@ -1,11 +1,11 @@
-name: SonarQube Analysis
+name: SonarQube SAST Scanner
 
 on:
   workflow_dispatch:
 
 jobs:
   sonarqube:
-    name: Build and Analyze
+    name: Sonar SAST Scan
     runs-on: ubuntu-latest
     
     steps:
