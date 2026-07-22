@@ -1,0 +1,39 @@
+name: OWASP ZAP DAST Scan
+
+on:
+  workflow_dispatch:
+
+jobs:
+  zap_scan:
+    name: ZAP DAST Scan
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      issues: write # Allows ZAP to automatically open GitHub Issues for findings
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Run OWASP ZAP Baseline Scan
+      - name: ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          # Target URL (replace or use ${{ secrets.TARGET_URL }})
+          target: ${{ secrets.TARGET_URL }}
+          
+          # Creates a GitHub Issue detailing findings
+          issue_title: 'ZAP DAST Vulnerability Report'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+          # Set to 'true' if you want the workflow step to fail when issues are found
+          fail_action: false
+
+      # Save the HTML report as an artifact
+      - name: Upload ZAP Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ZAP-DAST-Report
+          path: 'zap_out.html'
