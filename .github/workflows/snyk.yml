@@ -35,9 +35,12 @@ jobs:
         continue-on-error: true # Ensures pipeline continues to upload SARIF even if issues are found
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          # Tell Snyk exactly where the manifest file is and output a SARIF report
-          args: --file=app/requirements.txt --sarif-file-output=snyk.sarif
+        run: | 
+          # Step A: Update the Snyk Dashboard using the new secret 
+          snyk monitor --file=requirements.txt --org=${{ secrets.SNYK_ORG }} 
+          
+          # Step B: Output to the pipeline log and generate the SARIF file 
+          snyk test --file=requirements.txt --sarif-file-output=snyk.sarif
 
       # 4. Upload results to GitHub Security Tab
       - name: Upload Snyk Report to GitHub Security Tab
