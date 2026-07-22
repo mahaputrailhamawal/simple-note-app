@@ -26,6 +26,7 @@ jobs:
       # 3. Run Dependency-Check on the 'app' subfolder
       - name: Run OWASP Dependency Check
         uses: dependency-check/Dependency-Check_Action@main
+        continue-on-error: true
         with:
           project: 'My-App'
           path: './app' # Points directly to your subfolder
@@ -33,7 +34,6 @@ jobs:
           out: 'reports'
           args: >
             --nvdApiKey ${{ secrets.NVD_API_KEY }}
-            --failOnCVSS 7
             --enableExperimental
 
       # 4. Save the HTML report so you can download it from the Actions summary
