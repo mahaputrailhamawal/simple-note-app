@@ -16,7 +16,7 @@ jobs:
       - name: Setup Language Environment
         uses: actions/setup-python@v4 # Change to setup-python or setup-java if needed
         with:
-          node-version: '3.11'
+          python-version: '3.11'
 
       # 2. Install dependencies inside the 'app' subfolder
       - name: Install Dependencies
