@@ -30,7 +30,7 @@ jobs:
         run: pip install -r requirements.txt
       
       - name: Setup the Snyk CLI
-        uses: snyk/action/setup@master
+        uses: snyk/actions/setup@master
 
       # 3. Run Snyk Python Scan
       - name: Run Snyk SCA Scan
