@@ -1,0 +1,44 @@
+name: OWASP Dependency Check SCA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  dependency-check:
+    name: OWASP SCA Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 1. Setup your runtime environment (Node, Python, Java, etc.)
+      - name: Setup Language Environment
+        uses: actions/setup-python@v4 # Change to setup-python or setup-java if needed
+        with:
+          node-version: '3.11'
+
+      # 2. Install dependencies inside the 'app' subfolder
+      - name: Install Dependencies
+        working-directory: ./app
+        run: pip install -r requirements.txt # Change to 'pip install -r requirements.txt', 'mvn install', etc.
+
+      # 3. Run Dependency-Check on the 'app' subfolder
+      - name: Run OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'My-App'
+          path: './app' # Points directly to your subfolder
+          format: 'HTML'
+          out: 'reports'
+          args: >
+            --nvdApiKey ${{ secrets.NVD_API_KEY }}
+            --failOnCVSS 7
+
+      # 4. Save the HTML report so you can download it from the Actions summary
+      - name: Upload HTML Report as Artifact
+        uses: actions/upload-artifact@v4
+        if: always() # Ensures report uploads even if vulnerabilities cause step 3 to fail
+        with:
+          name: Dependency-Check-Report
+          path: reports
