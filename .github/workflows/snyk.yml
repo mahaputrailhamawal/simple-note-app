@@ -1,0 +1,46 @@
+name: Snyk SCA Scanner
+
+on:
+  workflow_dispatch:
+
+jobs:
+  snyk-sca:
+    name: Snyk Dependency Scan
+    runs-on: ubuntu-latest
+
+    # REQUIRED: Grants permission to upload results to the GitHub Security Tab
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 1. Setup Python Environment
+      - name: Setup Language Environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # 2. Install dependencies inside the 'app' subfolder
+      # (Snyk needs this so it can accurately build the dependency tree)
+      - name: Install Dependencies
+        working-directory: ./app
+        run: pip install -r requirements.txt
+
+      # 3. Run Snyk Python Scan
+      - name: Run Snyk SCA Scan
+        uses: snyk/actions/python@master
+        continue-on-error: true # Ensures pipeline continues to upload SARIF even if issues are found
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          # Tell Snyk exactly where the manifest file is and output a SARIF report
+          args: --file=app/requirements.txt --sarif-file-output=snyk.sarif
+
+      # 4. Upload results to GitHub Security Tab
+      - name: Upload Snyk Report to GitHub Security Tab
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: snyk.sarif
