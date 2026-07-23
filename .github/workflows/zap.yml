@@ -31,10 +31,20 @@ jobs:
             -r /zap/wrk/report_html.html \
             -I  # -I = tidak fail meski ada warning
         continue-on-error: true
-      
-      - name: Verify files
-        if: always()
-        run: ls -la ${{ github.workspace }}/report_*.*
+           
+      - name: Verify all files 
+        if: always() 
+        run: | 
+          echo "=== Workspace contents ===" 
+          ls -la ${{ github.workspace }}/ 
+          echo "=== Find any report files ===" 
+          find ${{ github.workspace }} -name "report*" 2>/dev/null 
+          find ${{ github.workspace }} -name "zap*" 2>/dev/null 
+          echo "=== Check inside Docker mount ===" 
+          docker run --rm \ 
+            -v ${{ github.workspace }}:/zap/wrk:rw \ 
+            ghcr.io/zaproxy/zaproxy:stable \ 
+            sh -c "ls -la /zap/wrk/"      
 
       - name: Upload ZAP Report
         uses: actions/upload-artifact@v4
