@@ -26,9 +26,9 @@ jobs:
             ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py \
             -t ${{ secrets.TARGET_URL }} \
-            -J /zap/wrk/report_json.json \
-            -w /zap/wrk/report_md.md \
-            -r /zap/wrk/report_html.html \
+            -J report_json.json \
+            -w report_md.md \
+            -r report_html.html \
             -I  # -I = tidak fail meski ada warning
         continue-on-error: true
            
@@ -39,12 +39,6 @@ jobs:
           ls -la ${{ github.workspace }}/ 
           echo "=== Find any report files ===" 
           find ${{ github.workspace }} -name "report*" 2>/dev/null 
-          find ${{ github.workspace }} -name "zap*" 2>/dev/null 
-          echo "=== Check inside Docker mount ===" 
-          docker run --rm \ 
-            -v ${{ github.workspace }}:/zap/wrk:rw \ 
-            ghcr.io/zaproxy/zaproxy:stable \ 
-            sh -c "ls -la /zap/wrk/"      
 
       - name: Upload ZAP Report
         uses: actions/upload-artifact@v4
