@@ -15,42 +15,47 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-     # - name: Setup workspace permissions
-      #  run: |
-       #   chmod 777 ${{ github.workspace }}
-        #  touch ${{ github.workspace }}/report_html.html
-         # touch ${{ github.workspace }}/report_json.json
-          #touch ${{ github.workspace }}/report_md.md
-          #chmod 777 ${{ github.workspace }}/report_html.html
-          #chmod 777 ${{ github.workspace }}/report_json.json
-          #chmod 777 ${{ github.workspace }}/report_md.md
-
       - name: Pull ZAP Docker image
         run: docker pull ghcr.io/zaproxy/zaproxy:stable
 
-      # -I flag = do not fail even when warnings are found
+      # Run ZAP and keep container alive to copy files out
       - name: Run ZAP Baseline Scan
         run: |
-          docker run --rm \
-            --user $(id -u):$(id -g) \
-            -v ${{ github.workspace }}:/zap/wrk:rw \
+          # Run container with a name so we can reference it
+          docker run \
+            --name zap_scan \
             --network host \
             ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py \
             -t ${{ secrets.TARGET_URL }} \
-            -J report_json.json \
-            -w report_md.md \
-            -r report_html.html \
-            -I
+            -J /zap/wrk/report_json.json \
+            -w /zap/wrk/report_md.md \
+            -r /zap/wrk/report_html.html \
+            -I || true
         continue-on-error: true
 
-    #  - name: Verify report files
-     #   if: always()
-      #  run: |
-       #   echo "=== Workspace contents ==="
-        #  ls -la ${{ github.workspace }}/
-         # echo "=== Find report files ==="
-          #find ${{ github.workspace }} -name "report*" 2>/dev/null
+      # Copy reports OUT of container to workspace
+      - name: Copy reports from container
+        if: always()
+        run: |
+          echo "=== Copying reports from container ==="
+          docker cp zap_scan:/zap/wrk/report_html.html ${{ github.workspace }}/report_html.html || echo "report_html.html not found"
+          docker cp zap_scan:/zap/wrk/report_json.json ${{ github.workspace }}/report_json.json || echo "report_json.json not found"
+          docker cp zap_scan:/zap/wrk/report_md.md ${{ github.workspace }}/report_md.md || echo "report_md.md not found"
+          echo "=== List container /zap/wrk/ ==="
+          docker exec zap_scan ls -la /zap/wrk/ 2>/dev/null || docker cp zap_scan:/zap/wrk /tmp/zap_wrk && ls -la /tmp/zap_wrk/
+
+      - name: Cleanup container
+        if: always()
+        run: docker rm -f zap_scan || true
+
+      - name: Verify report files
+        if: always()
+        run: |
+          echo "=== Workspace contents ==="
+          ls -la ${{ github.workspace }}/
+          echo "=== Report files ==="
+          find ${{ github.workspace }} -name "report*"
 
       - name: Upload ZAP Report
         uses: actions/upload-artifact@v4
