@@ -15,15 +15,15 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup workspace permissions
-        run: |
-          chmod 777 ${{ github.workspace }}
-          touch ${{ github.workspace }}/report_html.html
-          touch ${{ github.workspace }}/report_json.json
-          touch ${{ github.workspace }}/report_md.md
-          chmod 777 ${{ github.workspace }}/report_html.html
-          chmod 777 ${{ github.workspace }}/report_json.json
-          chmod 777 ${{ github.workspace }}/report_md.md
+     # - name: Setup workspace permissions
+      #  run: |
+       #   chmod 777 ${{ github.workspace }}
+        #  touch ${{ github.workspace }}/report_html.html
+         # touch ${{ github.workspace }}/report_json.json
+          #touch ${{ github.workspace }}/report_md.md
+          #chmod 777 ${{ github.workspace }}/report_html.html
+          #chmod 777 ${{ github.workspace }}/report_json.json
+          #chmod 777 ${{ github.workspace }}/report_md.md
 
       - name: Pull ZAP Docker image
         run: docker pull ghcr.io/zaproxy/zaproxy:stable
@@ -43,13 +43,13 @@ jobs:
             -I
         continue-on-error: true
 
-      - name: Verify report files
-        if: always()
-        run: |
-          echo "=== Workspace contents ==="
-          ls -la ${{ github.workspace }}/
-          echo "=== Find report files ==="
-          find ${{ github.workspace }} -name "report*" 2>/dev/null
+    #  - name: Verify report files
+     #   if: always()
+      #  run: |
+       #   echo "=== Workspace contents ==="
+        #  ls -la ${{ github.workspace }}/
+         # echo "=== Find report files ==="
+          #find ${{ github.workspace }} -name "report*" 2>/dev/null
 
       - name: Upload ZAP Report
         uses: actions/upload-artifact@v4
