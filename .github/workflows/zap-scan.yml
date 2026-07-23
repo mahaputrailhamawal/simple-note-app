@@ -32,6 +32,7 @@ jobs:
       - name: Run ZAP Baseline Scan
         run: |
           docker run --rm \
+            --user $(id -u):$(id -g) \
             -v ${{ github.workspace }}:/zap/wrk:rw \
             --network host \
             ghcr.io/zaproxy/zaproxy:stable \
