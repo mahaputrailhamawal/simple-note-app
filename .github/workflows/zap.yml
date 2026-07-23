@@ -31,6 +31,10 @@ jobs:
             -r /zap/wrk/report_html.html \
             -I  # -I = tidak fail meski ada warning
         continue-on-error: true
+      
+      - name: Verify files
+        if: always()
+        run: ls -la ${{ github.workspace }}/report_*.*
 
       - name: Upload ZAP Report
         uses: actions/upload-artifact@v4
@@ -41,3 +45,4 @@ jobs:
             ${{ github.workspace }}/report_html.html
             ${{ github.workspace }}/report_json.json
             ${{ github.workspace }}/report_md.md
+          if-no-files-found: warn
