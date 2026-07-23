@@ -26,9 +26,9 @@ jobs:
             ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py \
             -t ${{ secrets.TARGET_URL }} \
-            -J report_json.json \
-            -w report_md.md \
-            -r report_html.html \
+            -J /zap/wrk/report_json.json \
+            -w /zap/wrk/report_md.md \
+            -r /zap/wrk/report_html.html \
             -I  # -I = tidak fail meski ada warning
         continue-on-error: true
 
@@ -38,6 +38,6 @@ jobs:
         with:
           name: zap-report-${{ github.run_id }}
           path: |
-            report_html.html
-            report_json.json
-            report_md.md
+            ${{ github.workspace }}/report_html.html
+            ${{ github.workspace }}/report_json.json
+            ${{ github.workspace }}/report_md.md
