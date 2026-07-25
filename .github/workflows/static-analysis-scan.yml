@@ -70,6 +70,12 @@ jobs:
         with:
           sarif_file: app/snyk.sarif
 
+      - name: Download SARIF Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Snyk-SARIF-Report
+          path: app/snyk.sarif
+
   # ---------------------------------------------------
   # 3. STATIC APP SECURITY TESTING (SonarQube)
   # ---------------------------------------------------
@@ -83,7 +89,7 @@ jobs:
           fetch-depth: 0  # SonarQube requires full history for blame information
 
       - name: Run SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v4
+        uses: SonarSource/sonarqube-scan-action@v8
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
