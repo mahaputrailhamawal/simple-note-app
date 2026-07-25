@@ -8,33 +8,35 @@ jobs:
     name: ZAP DAST Scan
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      issues: write
+      contents: read      # read repo only
+      issues: write       # create issues for findings
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup workspace permissions
+      # Create isolated output directory owned by runner
+      # ZAP only writes here — not to the full workspace
+      - name: Create ZAP output directory
         run: |
-          chmod 777 ${{ github.workspace }}
-          touch ${{ github.workspace }}/report_html.html
-          touch ${{ github.workspace }}/report_json.json
-          touch ${{ github.workspace }}/report_md.md
-          chmod 777 ${{ github.workspace }}/report_html.html
-          chmod 777 ${{ github.workspace }}/report_json.json
-          chmod 777 ${{ github.workspace }}/report_md.md
+          mkdir -p ${{ github.workspace }}/zap-reports
+          chmod 777 ${{ github.workspace }}/zap-reports
 
       - name: Pull ZAP Docker image
         run: docker pull ghcr.io/zaproxy/zaproxy:stable
 
-      # -I flag = do not fail even when warnings are found
+      # -I = do not fail even when warnings are found
       - name: Run ZAP Baseline Scan
         run: |
           docker run --rm \
             --user $(id -u):$(id -g) \
-            -v ${{ github.workspace }}:/zap/wrk:rw \
+            --cap-drop ALL \
+            --security-opt no-new-privileges \
+            -v ${{ github.workspace }}/zap-reports:/zap/wrk:rw \
             --network host \
+            --read-only \
+            --tmpfs /tmp \
+            --tmpfs /zap/home \
             ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py \
             -t ${{ secrets.TARGET_URL }} \
@@ -47,18 +49,15 @@ jobs:
       - name: Verify report files
         if: always()
         run: |
-          echo "=== Workspace contents ==="
-          ls -la ${{ github.workspace }}/
+          echo "=== ZAP reports directory ==="
+          ls -la ${{ github.workspace }}/zap-reports/
           echo "=== Find report files ==="
-          find ${{ github.workspace }} -name "report*" 2>/dev/null
+          find ${{ github.workspace }}/zap-reports -name "report*" 2>/dev/null
 
       - name: Upload ZAP Report
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: zap-report-${{ github.run_id }}
-          path: |
-            ${{ github.workspace }}/report_html.html
-            ${{ github.workspace }}/report_json.json
-            ${{ github.workspace }}/report_md.md
+          path: ${{ github.workspace }}/zap-reports/
           if-no-files-found: warn
