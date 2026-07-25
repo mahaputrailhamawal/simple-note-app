@@ -15,42 +15,34 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Create ZAP output directory
+        run: mkdir -p ${{ github.workspace }}/zap-reports
+
       - name: Pull ZAP Docker image
         run: docker pull ghcr.io/zaproxy/zaproxy:stable
 
-      # No volume mount — ZAP writes internally
-      # No --rm so container persists for docker cp
       - name: Run ZAP Baseline Scan
         run: |
-          docker run \
-            --name zap_runner \
+          docker run --rm \
             --cap-drop ALL \
             --security-opt no-new-privileges \
+            -v ${{ github.workspace }}/zap-reports:/zap/wrk:rw \
             --network host \
             ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py \
             -t ${{ secrets.TARGET_URL }} \
-            -J /zap/wrk/report_json.json \
-            -w /zap/wrk/report_md.md \
-            -r /zap/wrk/report_html.html \
+            -J report_json.json \
+            -w report_md.md \
+            -r report_html.html \
+            --autooff \
             -I
         continue-on-error: true
 
-      # Copy files out from stopped container
-      - name: Extract reports from container
+      - name: Fix report ownership
         if: always()
         run: |
-          mkdir -p ${{ github.workspace }}/zap-reports
-          docker cp zap_runner:/zap/wrk/report_html.html \
-            ${{ github.workspace }}/zap-reports/ || echo "report_html not found"
-          docker cp zap_runner:/zap/wrk/report_json.json \
-            ${{ github.workspace }}/zap-reports/ || echo "report_json not found"
-          docker cp zap_runner:/zap/wrk/report_md.md \
-            ${{ github.workspace }}/zap-reports/ || echo "report_md not found"
-
-      - name: Cleanup container
-        if: always()
-        run: docker rm -f zap_runner || true
+          sudo chown -R $USER:$USER \
+            ${{ github.workspace }}/zap-reports/
 
       - name: Verify report files
         if: always()
