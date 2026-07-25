@@ -38,7 +38,7 @@ jobs:
 
     permissions:
       contents: read
-      security-event: write
+      security-events: write
 
     steps:
       - name: Checkout Code
