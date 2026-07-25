@@ -8,51 +8,55 @@ jobs:
     name: ZAP DAST Scan
     runs-on: ubuntu-latest
     permissions:
-      contents: read      # read repo only
-      issues: write       # create issues for findings
+      contents: read
+      issues: write
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Create isolated output directory owned by runner
-      # ZAP only writes here — not to the full workspace
-      - name: Create ZAP output directory
-        run: |
-          mkdir -p ${{ github.workspace }}/zap-reports
-          chmod 777 ${{ github.workspace }}/zap-reports
-
       - name: Pull ZAP Docker image
         run: docker pull ghcr.io/zaproxy/zaproxy:stable
 
-      # -I = do not fail even when warnings are found
+      # No volume mount — ZAP writes internally
+      # No --rm so container persists for docker cp
       - name: Run ZAP Baseline Scan
         run: |
-          docker run --rm \
-            --user $(id -u):$(id -g) \
+          docker run \
+            --name zap_runner \
             --cap-drop ALL \
             --security-opt no-new-privileges \
-            -v ${{ github.workspace }}/zap-reports:/zap/wrk:rw \
             --network host \
-            --read-only \
-            --tmpfs /tmp \
-            --tmpfs /zap/home \
             ghcr.io/zaproxy/zaproxy:stable \
             zap-baseline.py \
             -t ${{ secrets.TARGET_URL }} \
-            -J report_json.json \
-            -w report_md.md \
-            -r report_html.html \
+            -J /zap/wrk/report_json.json \
+            -w /zap/wrk/report_md.md \
+            -r /zap/wrk/report_html.html \
             -I
         continue-on-error: true
+
+      # Copy files out from stopped container
+      - name: Extract reports from container
+        if: always()
+        run: |
+          mkdir -p ${{ github.workspace }}/zap-reports
+          docker cp zap_runner:/zap/wrk/report_html.html \
+            ${{ github.workspace }}/zap-reports/ || echo "report_html not found"
+          docker cp zap_runner:/zap/wrk/report_json.json \
+            ${{ github.workspace }}/zap-reports/ || echo "report_json not found"
+          docker cp zap_runner:/zap/wrk/report_md.md \
+            ${{ github.workspace }}/zap-reports/ || echo "report_md not found"
+
+      - name: Cleanup container
+        if: always()
+        run: docker rm -f zap_runner || true
 
       - name: Verify report files
         if: always()
         run: |
-          echo "=== ZAP reports directory ==="
+          echo "=== ZAP reports ==="
           ls -la ${{ github.workspace }}/zap-reports/
-          echo "=== Find report files ==="
-          find ${{ github.workspace }}/zap-reports -name "report*" 2>/dev/null
 
       - name: Upload ZAP Report
         uses: actions/upload-artifact@v4
