@@ -1,0 +1,86 @@
+name: Static Analysis Scan
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  # ---------------------------------------------------
+  # 1. SECRET SCANNING (Gitleaks & TruffleHog)
+  # ---------------------------------------------------
+  secret_scanning:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required to scan full git history
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run TruffleHog
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --only-verified
+
+  # ---------------------------------------------------
+  # 2. SOFTWARE COMPOSITION ANALYSIS (Snyk)
+  # ---------------------------------------------------
+  snyk_sca:
+    name: Snyk SCA
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        working-directory: ./app
+        run: pip install -r requirements.txt
+
+      - name: Setup Snyk
+        uses: snyk/actions/setup@master
+
+      - name: Run Snyk Monitor and Test
+        working-directory: ./app
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          snyk monitor --file=requirements.txt --org=${{ secrets.SNYK_ORG }}
+          snyk test --file=requirements.txt --sarif-file-output=snyk.sarif
+
+      - name: Upload Snyk Report to GitHub Security Tab
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: app/snyk.sarif
+
+  # ---------------------------------------------------
+  # 3. STATIC APP SECURITY TESTING (SonarQube)
+  # ---------------------------------------------------
+  sonarqube_sast:
+    name: SonarQube SAST
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # SonarQube requires full history for blame information
+
+      - name: Run SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v4
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
