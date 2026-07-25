@@ -4,6 +4,50 @@ import psycopg2
 import os
 
 app = Flask(__name__)
+secret_key = os.environ.get('SECRET_KEY')
+if not secret_key:
+    raise RuntimeError(
+        "SECRET_KEY environment variable is not set. "
+        "Generate one with: python3 -c \"import secrets; print(secrets.token_hex(32))\""
+    )
+app.config['SECRET_KEY'] = secret_key
+app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'
+app.config['SESSION_COOKIE_SECURE'] = True    # if using HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # prevent JS access
+
+csrf = CSRFProtect(app)  # Fix: Anti-CSRF tokens on all forms
+
+@app.after_request
+def set_security_headers(response):
+    # Fix: CSP + clickjacking
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self'; "
+        "style-src 'self'; "
+        "img-src 'self' data:; "
+        "form-action 'self'; "
+        "frame-ancestors 'none'"
+    )
+    # Fix: clickjacking (belt & suspenders with CSP above)
+    response.headers['X-Frame-Options'] = 'DENY'
+    # Fix: MIME sniffing
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    # Fix: Cross-origin headers
+    response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
+    response.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
+    response.headers['Cross-Origin-Resource-Policy'] = 'same-origin'
+    # Fix: Permissions policy
+    response.headers['Permissions-Policy'] = (
+        'geolocation=(), microphone=(), camera=(), payment=(), usb=()'
+    )
+    # Fix: Server version leak
+    response.headers['Server'] = ''
+    # Fix: Cache control for task routes
+    if request.path.startswith('/task/'):
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+    return response
 
 # Koneksi ke database PostgreSQL
 conn = psycopg2.connect(
