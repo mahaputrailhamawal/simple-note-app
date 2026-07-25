@@ -43,18 +43,6 @@ jobs:
             -r report_html.html \
             -I
         continue-on-error: true
-      
-      # Copy reports OUT of container to workspace
-      - name: Copy reports from container
-        if: always()
-        run: |
-          echo "=== Copying reports from container ==="
-          docker cp zap_scan:/zap/wrk/report_html.html ${{ github.workspace }}/report_html.html || echo "report_html.html not found"
-          docker cp zap_scan:/zap/wrk/report_json.json ${{ github.workspace }}/report_json.json || echo "report_json.json not found"
-          docker cp zap_scan:/zap/wrk/report_md.md ${{ github.workspace }}/report_md.md || echo "report_md.md not found"
-          echo "=== List container /zap/wrk/ ==="
-          docker exec zap_scan ls -la /zap/wrk/ 2>/dev/null || docker cp zap_scan:/zap/wrk /tmp/zap_wrk && ls -la /tmp/zap_wrk/
-
 
       - name: Verify report files
         if: always()
