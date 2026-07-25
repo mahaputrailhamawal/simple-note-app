@@ -27,8 +27,6 @@ jobs:
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
-          base: ${{ github.event.repository.default_branch }}
-          head: HEAD
           extra_args: --only-verified
 
   # ---------------------------------------------------
@@ -37,6 +35,11 @@ jobs:
   snyk_sca:
     name: Snyk SCA
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      security-event: write
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
