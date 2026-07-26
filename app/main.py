@@ -11,8 +11,14 @@ if not secret_key:
         "Generate one with: python3 -c \"import secrets; print(secrets.token_hex(32))\""
     )
 app.config['SECRET_KEY'] = secret_key
-app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'
-app.config['SESSION_COOKIE_SECURE'] = True    # if using HTTPS
+
+# 'Lax' instead of 'Strict' — Strict blocks session cookie on normal page navigation
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
+# Only True when running HTTPS — True on HTTP causes browser to drop session cookie
+is_https = os.environ.get('HTTPS_ENABLED', 'false').lower() == 'true'
+app.config['SESSION_COOKIE_SECURE'] = is_https
+
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # prevent JS access
 
 csrf = CSRFProtect(app)  # Fix: Anti-CSRF tokens on all forms
